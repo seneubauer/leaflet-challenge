@@ -64,7 +64,7 @@ function init()
         }
 
         // get the color scale
-        let color_scale = Build_Color_Scale(earthquake_depths, 10);
+        let color_scale = Build_Color_Scale(earthquake_depths, 15, max = 100, min = -10);
 
         // iterate through the array
         for (let i = 0; i < earthquake_data.length; i++)
@@ -77,7 +77,11 @@ function init()
                 radius: Circle_Size_Calculator(earthquake_data[i].properties.mag)
             }).bindPopup(
                 "<h1>Details</h1>" + 
-                "<p>Felt: " + earthquake_data[i].properties.felt + "</p>"
+                "<p>Magnitude: " + earthquake_data[i].properties.mag + "</p>" + 
+                "<p>Depth: " + earthquake_data[i].geometry.coordinates[2] + "</p>" + 
+                "<p>Intensity: " + earthquake_data[i].properties.cdi + "</p>" + 
+                "<p>Latitude: " + earthquake_data[i].geometry.coordinates[1] + "</p>" + 
+                "<p>Longitude: " + earthquake_data[i].geometry.coordinates[0] + "</p>"
             ));
         }
 
@@ -190,9 +194,13 @@ function Build_Color_Scale(earthquake_depths, target_size, max = 0.0, min = 1000
     let upper = lower + span;
     for (let i = 0; i < target_size; i++)
     {
-        output.push({ hue: 200 + i * 11, saturation: 100, luminosity: 35 + i * 5, upper_depth: upper, lower_depth: lower });
+        let h = i * 360 / target_size;
+        let s = 100;
+        let l = 85 - i * 70 / target_size;
+        output.push({ hue: h, saturation: s, luminosity: l, hsl: `hsl(${h}, ${s}%, ${l}%)`, upper_depth: upper, lower_depth: lower });
         lower = upper;
         upper = lower + span;
     }
+    console.log(output);
     return output;
 }
