@@ -187,6 +187,5 @@ function Build_Color_Scale(earthquake_depths, target_size, max = 0.0, min = 1000
         lower = upper;
         upper = lower + span;
     }
-    console.log(output);
     return output;
 }

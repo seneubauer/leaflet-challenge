@@ -8,7 +8,8 @@ console.log("logic.js is connected to index.html");
 // data source
 let data_source = {
     title: "Past 7 Days; All Earthquakes",
-    source: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+    source: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson",
+    tectonics: "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json"
 };
 
 
@@ -31,6 +32,11 @@ function init()
     // construct the topographic layer
     let topo_layer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+    });
+
+    // construct the satellite layer
+    let Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
     });
 
     // initialize the earthquake circle array
@@ -74,53 +80,64 @@ function init()
         // package the earthquake data into a layer group
         let earthquake_layer = L.layerGroup(earthquake_circles)
 
-        // create the base layers object
-        let baseMaps = {
-            Street: street_layer,
-            Topography: topo_layer
-        };
+        // get the tectonic plate data
+        d3.json(data_source.tectonics).then(function (tectonic_data)
+        {
+            console.log(tectonic_data);
 
-        // create the overlay layers object
-        let overlayMaps = {
-            Earthquakes: earthquake_layer
-        };
+            let tectonic_plates = L.geoJSON(tectonic_data.features);
+        
 
-        // initialize and configure the leaflet map
-        let leaflet_map = L.map("leaflet_map", {
-            center: [39.833333, -98.583333],
-            zoom: 5,
-            layers: [street_layer, earthquake_layer]
+            // create the base layers object
+            let baseMaps = {
+                Street: street_layer,
+                Topography: topo_layer,
+                Satellite: Esri_WorldImagery
+            };
+
+            // create the overlay layers object
+            let overlayMaps = {
+                Earthquakes: earthquake_layer,
+                "Tectonic Plates": tectonic_plates
+            };
+
+            // initialize and configure the leaflet map
+            let leaflet_map = L.map("leaflet_map", {
+                center: [39.833333, -98.583333],
+                zoom: 5,
+                layers: [street_layer, earthquake_layer, tectonic_plates]
+            });
+
+            // add the base and overlay layers
+            L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(leaflet_map);
+
+            // create the legend
+            let legend = L.control({ position: "bottomright" });
+            legend.onAdd = function() {
+                let div = L.DomUtil.create("div", "info legend");
+                let labels = [];
+
+                // build the legend HTML structure
+                let legend_info = "<h1>Earthquake Depth Color Scale</h1>" + 
+                                "<div class=\"labels\">" + 
+                                    "<div class=\"min\">" + color_scale[0].lower_depth.toFixed(2) + "</div>" +
+                                    "<div class=\"max\">" + color_scale[color_scale.length - 1].upper_depth.toFixed(2) + "</div>" +
+                                "</div>";
+
+                // build the legend scale
+                for (let i = 0; i < color_scale.length; i++)
+                {
+                    labels.push("<li style=\"background-color: hsl(" + color_scale[i].hue + ", " + color_scale[i].saturation + "%, " + color_scale[i].luminosity + "%)\"></li>");
+                }
+
+                // assign the legend HTML
+                div.innerHTML = legend_info + "<ul>" + labels.join("") + "</ul>";
+
+                return div;
+            };
+
+            legend.addTo(leaflet_map);
         });
-
-        // add the base and overlay layers
-        L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(leaflet_map);
-
-        // create the legend
-        let legend = L.control({ position: "bottomright" });
-        legend.onAdd = function() {
-            let div = L.DomUtil.create("div", "info legend");
-            let labels = [];
-
-            // build the legend HTML structure
-            let legend_info = "<h1>Earthquake Depth Color Scale</h1>" + 
-                              "<div class=\"labels\">" + 
-                                  "<div class=\"min\">" + color_scale[0].lower_depth.toFixed(2) + "</div>" +
-                                  "<div class=\"max\">" + color_scale[color_scale.length - 1].upper_depth.toFixed(2) + "</div>" +
-                              "</div>";
-
-            // build the legend scale
-            for (let i = 0; i < color_scale.length; i++)
-            {
-                labels.push("<li style=\"background-color: hsl(" + color_scale[i].hue + ", " + color_scale[i].saturation + "%, " + color_scale[i].luminosity + "%)\"></li>");
-            }
-
-            // assign the legend HTML
-            div.innerHTML = legend_info + "<ul>" + labels.join("") + "</ul>";
-
-            return div;
-        };
-
-        legend.addTo(leaflet_map);
     });
 }
 
@@ -187,6 +204,5 @@ function Build_Color_Scale(earthquake_depths, target_size, max = 0.0, min = 1000
         lower = upper;
         upper = lower + span;
     }
-    console.log(output);
     return output;
 }
