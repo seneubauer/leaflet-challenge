@@ -11,20 +11,6 @@ let data_source = {
     source: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
 };
 
-// color scale
-// let color_scale = [
-//     { hue: 240, saturation: 100, luminosity: 35, udepth: 100, ldepth: 0 },
-//     { hue: 243, saturation: 100, luminosity: 38, udepth: 200, ldepth: 100 },
-//     { hue: 246, saturation: 100, luminosity: 41, udepth: 300, ldepth: 200 },
-//     { hue: 249, saturation: 100, luminosity: 44, udepth: 400, ldepth: 300 },
-//     { hue: 252, saturation: 100, luminosity: 47, udepth: 500, ldepth: 400 },
-//     { hue: 255, saturation: 100, luminosity: 50, udepth: 600, ldepth: 500 },
-//     { hue: 258, saturation: 100, luminosity: 53, udepth: 700, ldepth: 600 },
-//     { hue: 261, saturation: 100, luminosity: 56, udepth: 800, ldepth: 700 },
-//     { hue: 264, saturation: 100, luminosity: 59, udepth: 900, ldepth: 800 },
-//     { hue: 267, saturation: 100, luminosity: 62, udepth: 1000, ldepth: 900 }
-// ];
-
 
 
 /* ----- page initialization ----- */
